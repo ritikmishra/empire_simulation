@@ -18,9 +18,9 @@ class Map:
 
     def __getitem__(self, key):
         if type(key) is not tuple:
-            raise IndexError("Index must be tuple of size 2")
+            raise IndexError("Index must be tuple of size 2, but was actually " + str(key))
         if len(key) != 2:
-            raise IndexError("Index must be tuple of size 2")
+            raise IndexError("Index must be tuple of size 2, but was actually " + str(key))
         return self.grid[key[1]][key[0]]
 
     def rand_select(self):

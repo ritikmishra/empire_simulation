@@ -1,7 +1,9 @@
 from Tkinter import *
 import abc
 import math
+from map import Map
 
+import map
 from empire import Empire
 
 WIDTH, HEIGHT = 1336, 200
@@ -20,7 +22,6 @@ COLUMN_DY = HEIGHT / NUM_COLUMNS
 class App:
     def __init__(self, master, map):
 
-
         self.empires = {}
 
         self.frame = Frame(master, width=MAP_SIZE + SIDEBAR_WIDTH, height=MAP_SIZE)
@@ -30,6 +31,7 @@ class App:
         self.sidebar.grid(row=0, column=1, rowspan=4, columnspan=1)
 
         self.map = map
+        self.colormap = Map(self.map.size)
         self.canvas = Canvas(self.frame, width=MAP_SIZE, height=MAP_SIZE, bg="#FFFFFF")
         self.canvas.grid(row=0, column=0)
 
@@ -46,7 +48,8 @@ class App:
                           "Climate": Label(self.sidebar, text="Climate: N/A"),
                           "Ore": Label(self.sidebar, text="Ore: N/A"),
                           "Desirability": Label(self.sidebar, text="Desirability: N/A"),
-                          "Travel": Label(self.sidebar, text="Travel: N/A")}
+                          "Travel": Label(self.sidebar, text="Travel: N/A"),
+                          "Empire": Label(self.sidebar, text="Empire: N/A")}
 
         for i, things in enumerate(self.textboxes.items()):
             key, label = things
@@ -88,8 +91,7 @@ class App:
 
         if self.last_clicked is not None:
             self[self.last_clicked] = "#FFFFFF"
-            for name, empire in self.empires.items():
-                empire.color_cells()
+            self.color_empires()
 
         self[location] = "#0000FF"
 
@@ -122,23 +124,31 @@ class App:
 
         self.map[location].color = color
 
-        top_left = (location[0] * self.cellpx, location[1] * self.cellpx)
-        bottom_right = (top_left[0] + self.cellpx, top_left[1] + self.cellpx)
+        top_left = ((location[0] * self.cellpx), (location[1] * self.cellpx))
+        bottom_right = ((top_left[0] + self.cellpx), (top_left[1] + self.cellpx))
         self.canvas.create_rectangle(top_left, bottom_right, fill=color)
+        self.canvas.addtag_closest(location, top_left[0], top_left[1])
 
     def turn(self):
         self.map.turn()
-        for name, val in self.map[self.last_clicked].properties.items():
-            self.textboxes[name].config(text=name + ": " + str(val))
+        if self.last_clicked is not None:
+            for name, val in self.map[self.last_clicked].properties.items():
+                self.textboxes[name].config(text=name + ": " + str(val))
 
         for row in self.map.grid:
             for cell in row:
                 top_left = (cell.properties["Location"][0] * self.cellpx, cell.properties["Location"][1] * self.cellpx)
                 bottom_right = (top_left[0] + self.cellpx, top_left[1] + self.cellpx)
                 self.canvas.create_rectangle(top_left, bottom_right, fill=cell.color)
+                self.canvas.addtag_closest(cell.properties["Location"], top_left[0], top_left[1])
 
         for name, empire in self.empires.items():
             empire.turn()
 
     def add_empire(self, empire):
         self.empires[empire.name] = empire
+        self.color_empires()
+
+    def color_empires(self):
+        for name, empire in self.empires.items():
+            empire.color_cells()
