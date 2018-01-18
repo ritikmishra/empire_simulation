@@ -2,6 +2,8 @@ from Tkinter import *
 import abc
 import math
 
+from empire import Empire
+
 WIDTH, HEIGHT = 1336, 200
 
 MAP_SIZE = 600
@@ -17,46 +19,39 @@ COLUMN_DY = HEIGHT / NUM_COLUMNS
 
 class App:
     def __init__(self, master, map):
+
+
+        self.empires = {}
+
         self.frame = Frame(master, width=MAP_SIZE + SIDEBAR_WIDTH, height=MAP_SIZE)
         self.frame.grid(row=0, column=0, columnspan=2)
-
 
         self.sidebar = Frame(self.frame, width=SIDEBAR_WIDTH, height=MAP_SIZE)
         self.sidebar.grid(row=0, column=1, rowspan=4, columnspan=1)
 
-
         self.map = map
-        self.canvas = Canvas(self.frame, width=MAP_SIZE , height=MAP_SIZE, bg="#FFFFFF")
+        self.canvas = Canvas(self.frame, width=MAP_SIZE, height=MAP_SIZE, bg="#FFFFFF")
         self.canvas.grid(row=0, column=0)
 
         self.nextturn = Button(self.sidebar, text="Turn", command=self.turn)
         self.nextturn.grid(row=0, column=0)
 
-
-        self.textboxes = {}
-
-        self.textboxes["Location"] = Label(self.sidebar, text="Location: N/A")
-        self.textboxes["Population"] = Label(self.sidebar, text="Population: N/A")
-
-        self.textboxes["Mountainous"] = Label(self.sidebar, text="Mountainous: N/A")
-        self.textboxes["Land Area"] = Label(self.sidebar, text="Land Area: N/A")
-
-        self.textboxes["Land Fertility"] = Label(self.sidebar, text="Land Fertility: N/A")
-        self.textboxes["Livestock"] = Label(self.sidebar, text="Livestock: N/A")
-
-        self.textboxes["Forest"] = Label(self.sidebar, text="Forest: N/A")
-
-        self.textboxes["Climate"] = Label(self.sidebar, text="Climate: N/A")
-
-        self.textboxes["Ore"] = Label(self.sidebar, text="Ore: N/A")
-
-        self.textboxes["Desirability"] = Label(self.sidebar, text="Desirability: N/A")
-        self.textboxes["Travel"] = Label(self.sidebar, text="Travel: N/A")
+        self.textboxes = {"Location": Label(self.sidebar, text="Location: N/A"),
+                          "Population": Label(self.sidebar, text="Population: N/A"),
+                          "Mountainous": Label(self.sidebar, text="Mountainous: N/A"),
+                          "Land Area": Label(self.sidebar, text="Land Area: N/A"),
+                          "Land Fertility": Label(self.sidebar, text="Land Fertility: N/A"),
+                          "Livestock": Label(self.sidebar, text="Livestock: N/A"),
+                          "Forest": Label(self.sidebar, text="Forest: N/A"),
+                          "Climate": Label(self.sidebar, text="Climate: N/A"),
+                          "Ore": Label(self.sidebar, text="Ore: N/A"),
+                          "Desirability": Label(self.sidebar, text="Desirability: N/A"),
+                          "Travel": Label(self.sidebar, text="Travel: N/A")}
 
         for i, things in enumerate(self.textboxes.items()):
             key, label = things
 
-            label.grid(row=i+1, column=0)
+            label.grid(row=i + 1, column=0)
 
         self.cellpx = float(MAP_SIZE) / map.size
         print(self.cellpx)
@@ -73,14 +68,14 @@ class App:
 
         y = 0
 
-        self.canvas.create_line(g, g, MAP_SIZE, g) # Topmost grid line
+        self.canvas.create_line(g, g, MAP_SIZE, g)  # Topmost grid line
 
         while y <= MAP_SIZE:
             self.canvas.create_line(0, y, MAP_SIZE, y)  # horizontal lines
             y += self.cellpx
 
         self.img = PhotoImage(width=MAP_SIZE, height=MAP_SIZE)
-        self.canvas.create_image((MAP_SIZE/2 , MAP_SIZE/2), image=self.img, state="normal")
+        self.canvas.create_image((MAP_SIZE / 2, MAP_SIZE / 2), image=self.img, state="normal")
 
         self.canvas.bind("<Button-1>", self._click_callback)
 
@@ -93,7 +88,11 @@ class App:
 
         if self.last_clicked is not None:
             self[self.last_clicked] = "#FFFFFF"
+            for name, empire in self.empires.items():
+                empire.color_cells()
+
         self[location] = "#0000FF"
+
         self.last_clicked = location
 
         # self.textboxes["Location"].config(text="Location: " + str(self.map[location].location))
@@ -127,7 +126,6 @@ class App:
         bottom_right = (top_left[0] + self.cellpx, top_left[1] + self.cellpx)
         self.canvas.create_rectangle(top_left, bottom_right, fill=color)
 
-
     def turn(self):
         self.map.turn()
         for name, val in self.map[self.last_clicked].properties.items():
@@ -135,13 +133,12 @@ class App:
 
         for row in self.map.grid:
             for cell in row:
-
-                top_left = (cell.properties[[0] * self.cellpx, location[1] * self.cellpx)
+                top_left = (cell.properties["Location"][0] * self.cellpx, cell.properties["Location"][1] * self.cellpx)
                 bottom_right = (top_left[0] + self.cellpx, top_left[1] + self.cellpx)
                 self.canvas.create_rectangle(top_left, bottom_right, fill=cell.color)
 
+        for name, empire in self.empires.items():
+            empire.turn()
 
-
-
-
-
+    def add_empire(self, empire):
+        self.empires[empire.name] = empire

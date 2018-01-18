@@ -22,3 +22,7 @@ class Map:
         if len(key) != 2:
             raise IndexError("Index must be tuple of size 2")
         return self.grid[key[1]][key[0]]
+
+    def rand_select(self):
+        loc =  random.randrange(0, self.size), random.randrange(0, self.size)
+        return self[loc]

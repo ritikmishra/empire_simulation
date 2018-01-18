@@ -82,7 +82,7 @@ class Cell:
     Outputs the number of wood extracted from the trees 
     """
     def chopTrees(self, labor):
-        return self.properties["Forest"] * labor
+        return self._oreFunc(self.properties["Forest"] * self.properties["Land Area"] * 100) * labor
 
 
     """
