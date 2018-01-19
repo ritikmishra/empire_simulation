@@ -1,6 +1,5 @@
-from Tkinter import *
+from tkinter import *
 from app import App
-from cell import Cell
 from empire import Empire
 from map import Map
 

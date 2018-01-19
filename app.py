@@ -1,10 +1,7 @@
-from Tkinter import *
-import abc
 import math
-from map import Map
+from tkinter import *
 
-import map
-from empire import Empire
+from map import Map
 
 WIDTH, HEIGHT = 1336, 200
 
@@ -85,7 +82,7 @@ class App:
         self.last_clicked = None
 
     def _click_callback(self, event):
-        print "clicked at", event.x, event.y
+        print("clicked at", event.x, event.y)
 
         location = (int(math.floor(event.x / self.cellpx)), int(math.floor(event.y / self.cellpx)))
 
