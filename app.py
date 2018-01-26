@@ -96,7 +96,7 @@ class App:
         if self.last_clicked is not None:
             self[self.last_clicked] = self.map[self.last_clicked].color
 
-        self[location] = App.SELECTED_COLOR  # a blue color
+        self[location] = App.SELECTED_COLOR  # a color
 
         self.last_clicked = location
 
@@ -137,7 +137,7 @@ class App:
 
         sortEmpire = lambda x, y: x.military_strength - y.military_strength
 
-        self.empires = sorted(self.empires, key=functools.cmp_to_key(sortEmpire))
+        self.empires = sorted(self.empires, key=functools.cmp_to_key(sortEmpire), reverse=False)
 
         for empire in self.empires:
             empire.invade(self.empires)

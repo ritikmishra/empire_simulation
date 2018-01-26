@@ -5,6 +5,7 @@ import math
 
 class Cell:
     EPSILON = 1e-10
+
     def __init__(self):
         self.properties = {}
 
@@ -34,11 +35,11 @@ class Cell:
         result.properties["Land Fertility"] = random.random()  # How fertile the land is, from 0 to 1
         result.properties["Livestock"] = random.random()  # Percent of land suitable for livestock ranching
 
-        result.properties["Forest"] = random.betavariate(2,2)  # Percent of land with forest
+        result.properties["Forest"] = random.betavariate(2, 2)  # Percent of land with forest
 
         result.properties["Climate"] = random.gauss(0, 20)  # deviation from 23 degrees centigrade
 
-        result.properties["Ore"] = random.gauss(0, 1)  # amount of ore in the land
+        result.properties["Ore"] = random.betavariate(2, 2)  # Percent of land with forest
 
         result.properties["Population"] = random.gauss(50, 15)
         result.base_death_rate = random.gauss(0.5, 0.25)  # gaussian
@@ -62,7 +63,8 @@ class Cell:
     def growPop(self):
         # print("I grew a pop!")
 
-        dy = self.properties["Population"] * (self.base_birth_rate - self.base_death_rate) * (1 - self.properties["Population"] / self.carrying_capacity )
+        dy = self.properties["Population"] * (self.base_birth_rate - self.base_death_rate) * (
+        1 - self.properties["Population"] / self.carrying_capacity)
         self.properties["Population"] = self.properties["Population"] + dy
 
     """
@@ -78,31 +80,34 @@ class Cell:
     Takes in the number of people that are mining the ore
     Outputs the number of metals extracted from the ore 
     """
+
     def mineOre(self, labor):
+        if self.properties["Ore"] > 0:
+            extract = self._oreFunc(self.properties["Ore"])
+            self.properties["Ore"] -= extract
 
-        extract = self._oreFunc(self.properties["Ore"])
-        self.properties["Ore"] -= extract
-
-        return labor * self.properties["Land Area"] * extract
+            return labor * self.properties["Land Area"] * extract
+        return 0.0
 
     """
     Takes in the number of people that are chopping the trees
     Outputs the number of wood extracted from the trees 
     """
+
     def chopTrees(self, labor):
-        dy = (0.2  - self._treeFunc(self.properties["Forest"])) * self.properties["Forest"] * (1 - self.properties["Forest"])
+        dy = (self.properties["Land Fertility"] - self._treeFunc(self.properties["Forest"])) * self.properties[
+            "Forest"] * (1 - self.properties["Forest"])
         self.properties["Forest"] += dy
         return dy * self.properties["Land Area"] * labor
-
 
     """
     When mining ore, this func defines the amount of ore extracted
     """
+
     @staticmethod
     def _oreFunc(x):
-        return math.log(abs(x)+1)
-
+        return math.log(abs(x) + 1)
 
     @staticmethod
     def _treeFunc(x):
-        return -1.0 / ( (x+1) ** 2 + 1 ) + 0.5
+        return -1.0 / ((x + 1) ** 2 + 1) + 0.5
