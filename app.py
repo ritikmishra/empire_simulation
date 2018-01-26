@@ -1,6 +1,8 @@
 import math
 from tkinter import *
 
+import functools
+
 from map import Map
 
 WIDTH, HEIGHT = 1336, 200
@@ -17,9 +19,11 @@ COLUMN_DY = HEIGHT / NUM_COLUMNS
 
 
 class App:
+    SELECTED_COLOR = "#FF0000"
+
     def __init__(self, master, map):
 
-        self.empires = {}
+        self.empires = []
 
         self.frame = Frame(master, width=MAP_SIZE + SIDEBAR_WIDTH, height=MAP_SIZE)
         self.frame.grid(row=0, column=0, columnspan=2)
@@ -54,7 +58,7 @@ class App:
             label.grid(row=i + 1, column=0)
 
         self.cellpx = float(MAP_SIZE) / map.size
-        print(self.cellpx)
+
 
         g = 3
 
@@ -81,16 +85,18 @@ class App:
 
         self.last_clicked = None
 
+        self.color_empires()
+        self.render_cells()
+
     def _click_callback(self, event):
-        print("clicked at", event.x, event.y)
+        # print("clicked at", event.x, event.y)
 
         location = (int(math.floor(event.x / self.cellpx)), int(math.floor(event.y / self.cellpx)))
 
         if self.last_clicked is not None:
-            self[self.last_clicked] = "#FFFFFF"
-            self.color_empires()
+            self[self.last_clicked] = self.map[self.last_clicked].color
 
-        self[location] = "#0000FF"
+        self[location] = App.SELECTED_COLOR  # a blue color
 
         self.last_clicked = location
 
@@ -119,7 +125,7 @@ class App:
         if len(location) != 2:
             raise ValueError("The location must be [x, y] coordinates")
 
-        self.map[location].color = color
+        # self.map[location].color = color
 
         top_left = ((location[0] * self.cellpx), (location[1] * self.cellpx))
         bottom_right = ((top_left[0] + self.cellpx), (top_left[1] + self.cellpx))
@@ -128,10 +134,33 @@ class App:
 
     def turn(self):
         self.map.turn()
-        if self.last_clicked is not None:
-            for name, val in self.map[self.last_clicked].properties.items():
-                self.textboxes[name].config(text=name + ": " + str(val))
 
+        sortEmpire = lambda x, y: x.military_strength - y.military_strength
+
+        self.empires = sorted(self.empires, key=functools.cmp_to_key(sortEmpire))
+
+        for empire in self.empires:
+            empire.invade(self.empires)
+            empire.turn()
+
+            print("Empire", empire.name, "has", empire.military_strength, "military strength")
+
+
+        self.update_sidebar()
+        self.render_cells()
+
+        self[self.last_clicked] = App.SELECTED_COLOR
+
+
+    def add_empire(self, empire):
+        self.empires.append(empire)
+        self.color_empires()
+
+    def color_empires(self):
+        for empire in self.empires:
+            empire.color_cells()
+
+    def render_cells(self):
         for row in self.map.grid:
             for cell in row:
                 top_left = (cell.properties["Location"][0] * self.cellpx, cell.properties["Location"][1] * self.cellpx)
@@ -139,13 +168,7 @@ class App:
                 self.canvas.create_rectangle(top_left, bottom_right, fill=cell.color)
                 self.canvas.addtag_closest(cell.properties["Location"], top_left[0], top_left[1])
 
-        for name, empire in self.empires.items():
-            empire.turn()
-
-    def add_empire(self, empire):
-        self.empires[empire.name] = empire
-        self.color_empires()
-
-    def color_empires(self):
-        for name, empire in self.empires.items():
-            empire.color_cells()
+    def update_sidebar(self):
+        if self.last_clicked is not None:
+            for name, val in self.map[self.last_clicked].properties.items():
+                self.textboxes[name].config(text=name + ": " + str(val))

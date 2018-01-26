@@ -26,3 +26,23 @@ class Map:
     def rand_select(self):
         loc =  random.randrange(0, self.size), random.randrange(0, self.size)
         return self[loc]
+
+    def getCellsInRadius(self, r, loc):
+        if r > 0:
+            new_territories = set()
+            a = loc[0]
+            b = loc[1]
+
+            for dx in range(-r, r+1):
+                for dy in range(-r, r+1):
+                    new_territories.add((a + dx, b + dy))
+
+            return new_territories
+
+    def getAdjacentLocs(self, locs):
+        adj_locs = set()
+        for loc in locs:
+            radius_locs = self.getCellsInRadius(1, loc)
+            for loc in radius_locs:
+                adj_locs.add(loc)
+        return adj_locs

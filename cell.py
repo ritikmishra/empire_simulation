@@ -4,6 +4,7 @@ import math
 
 
 class Cell:
+    EPSILON = 1e-10
     def __init__(self):
         self.properties = {}
 
@@ -11,6 +12,8 @@ class Cell:
 
         self.invade_multiplier = None
         self.exvade_multiplier = None
+
+        self.carrying_capacity = None
 
         self.troops = []
         self.sovereign = 0
@@ -31,16 +34,18 @@ class Cell:
         result.properties["Land Fertility"] = random.random()  # How fertile the land is, from 0 to 1
         result.properties["Livestock"] = random.random()  # Percent of land suitable for livestock ranching
 
-        result.properties["Forest"] = random.random()  # Percent of land with forest
+        result.properties["Forest"] = random.betavariate(2,2)  # Percent of land with forest
 
         result.properties["Climate"] = random.gauss(0, 20)  # deviation from 23 degrees centigrade
 
-        result.properties["Ore"] = max(random.gauss(10, 20), 0)  # amount of ore in the land
+        result.properties["Ore"] = random.gauss(0, 1)  # amount of ore in the land
 
         result.properties["Population"] = random.gauss(50, 15)
         result.base_death_rate = random.gauss(0.5, 0.25)  # gaussian
         result.base_birth_rate = result.base_death_rate + random.uniform(0.1,
                                                                          0.5)  # death_rate + uniform \in [-0.2, 0.2]
+
+        result.carrying_capacity = result.properties["Population"] * random.gauss(10, 4)
 
         result.properties["Desirability"] = result.properties["Land Area"] \
                                             * (result.properties["Ore"] + result.properties["Forest"]
@@ -50,12 +55,15 @@ class Cell:
         result.properties["Travel"] = math.sqrt(result.properties["Mountainous"] \
                                                 * result.properties["Land Area"])  # lower = better
 
+        result.properties["Empire"] = "Unconquered"
+
         return result
 
     def growPop(self):
         # print("I grew a pop!")
-        self.properties["Population"] = ((1 - self.base_death_rate) * self.properties["Population"]) + (
-            (1 + self.base_birth_rate) * self.properties["Population"])
+
+        dy = self.properties["Population"] * (self.base_birth_rate - self.base_death_rate) * (1 - self.properties["Population"] / self.carrying_capacity )
+        self.properties["Population"] = self.properties["Population"] + dy
 
     """
     When calculating desirability, this function adjusts the temp constant so that pos temp impacts less than neg temp
@@ -72,17 +80,19 @@ class Cell:
     """
     def mineOre(self, labor):
 
-        extract = Cell._oreFunc(self.properties["Ore"])
+        extract = self._oreFunc(self.properties["Ore"])
         self.properties["Ore"] -= extract
 
-        return labor * extract
+        return labor * self.properties["Land Area"] * extract
 
     """
     Takes in the number of people that are chopping the trees
     Outputs the number of wood extracted from the trees 
     """
     def chopTrees(self, labor):
-        return self._oreFunc(self.properties["Forest"] * self.properties["Land Area"] * 100) * labor
+        dy = (0.2  - self._treeFunc(self.properties["Forest"])) * self.properties["Forest"] * (1 - self.properties["Forest"])
+        self.properties["Forest"] += dy
+        return dy * self.properties["Land Area"] * labor
 
 
     """
@@ -90,4 +100,9 @@ class Cell:
     """
     @staticmethod
     def _oreFunc(x):
-        return 1.021865 ** x
+        return math.log(abs(x)+1)
+
+
+    @staticmethod
+    def _treeFunc(x):
+        return -1.0 / ( (x+1) ** 2 + 1 ) + 0.5
