@@ -116,7 +116,7 @@ class App:
         top_left = ((location[0] * self.cellpx), (location[1] * self.cellpx))
         bottom_right = ((top_left[0] + self.cellpx), (top_left[1] + self.cellpx))
         self.canvas.create_rectangle(top_left, bottom_right, fill=color)
-        self.canvas.addtag_closest(location, top_left[0], top_left[1])
+        # self.canvas.addtag_closest(location, top_left[0], top_left[1])
 
     def turn(self):
         self.map.turn()
@@ -153,7 +153,7 @@ class App:
                 top_left = (cell.properties["Location"][0] * self.cellpx, cell.properties["Location"][1] * self.cellpx)
                 bottom_right = (top_left[0] + self.cellpx, top_left[1] + self.cellpx)
                 self.canvas.create_rectangle(top_left, bottom_right, fill=cell.color)
-                self.canvas.addtag_closest(cell.properties["Location"], top_left[0], top_left[1])
+                # self.canvas.addtag_closest(cell.properties["Location"], top_left[0], top_left[1])
 
     def update_sidebar(self):
         if self.last_clicked is not None:

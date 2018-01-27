@@ -46,7 +46,7 @@ class Cell:
         result.base_birth_rate = result.base_death_rate + random.uniform(0.1,
                                                                          0.5)  # death_rate + uniform \in [-0.2, 0.2]
 
-        result.carrying_capacity = result.properties["Population"] * random.gauss(10, 4)
+        result.carrying_capacity = result.properties["Population"] * random.betavariate(2,2) * 10
 
         result.properties["Desirability"] = result.properties["Land Area"] \
                                             * (result.properties["Ore"] + result.properties["Forest"]
@@ -86,6 +86,10 @@ class Cell:
             extract = self._oreFunc(self.properties["Ore"])
             self.properties["Ore"] -= extract
 
+            if math.isnan(extract):
+                pass
+
+
             return labor * self.properties["Land Area"] * extract
         return 0.0
 
@@ -98,9 +102,9 @@ class Cell:
         dy = (self.properties["Land Fertility"] - self._treeFunc(self.properties["Forest"])) * self.properties[
             "Forest"] * (1 - self.properties["Forest"])
         self.properties["Forest"] -= dy
-        if dy < 0:
-            # print("     ")
-            pass
+        if math.isnan(dy):
+            print("     ")
+
         return dy * self.properties["Land Area"] * labor
 
     """

@@ -2,9 +2,13 @@ import random
 
 import functools
 
+import math
+
+from map import Map
+
 
 class Empire:
-    kP = 1
+    kP = 0
     ADULT_PERCENT = 0.65
     APP = None
 
@@ -41,19 +45,23 @@ class Empire:
             self.metals += cell.mineOre(self.mine_alloc * available_labor)
             self.wood += cell.chopTrees(self.chop_alloc * available_labor)
             self.pop += cell.properties["Population"]
+            if self.metals == float("inf"):
+                raise Exception("what the frickin heck")
             self.land_area += cell.properties["Land Area"] - 0.5
             self.travel += cell.properties["Travel"]
 
             # recruit troops
 
-        self.expand_to_nearby()
-        self.color_cells()
 
-        self.military_strength = self.pop * Empire.kP * (self.metals + self.wood) - self.travel
-        self.mine_alloc = self.metals / self.military_strength
-        self.chop_alloc = 1 - self.mine_alloc
+        self.military_strength = (self.pop * Empire.kP + self.metals + self.wood)
+        # self.mine_alloc = self.metals / self.military_strength
+        # self.chop_alloc = 1 - self.mine_alloc
         if self.military_strength < 0:
             print("WARN:", self.name, "neg mil strength", "Metals:", self.metals, "Wood:", self.wood)
+
+
+        self.expand_to_nearby()
+        self.color_cells()
 
 
     def color_cells(self):
@@ -85,6 +93,7 @@ class Empire:
                     self.territory.add(cell)
                     self.military_strength -= (random.gauss(50, 10) + cell.properties["Desirability"]) / reduction
 
+    """Very power-hungry, slow method."""
     def invade(self, other_empires):
 
         for other_empire in other_empires:
@@ -103,6 +112,7 @@ class Empire:
                 other_empire.territory = other_empire.territory - invaded_territory
                 self.territory = self.territory | invaded_territory
 
+    """Also a very power hungry slow method"""
     def getBeyondBorders(self):
         borders = set()
         for cell in self.territory:
@@ -113,6 +123,56 @@ class Empire:
         border_cells = set(Empire.APP.map[x, y] for x, y in borders)
 
         return border_cells - self.territory
+
+    def getBoundary(self):
+        N = len(self.territory)
+        points = [x.properties["Location"] for x in self.territory]
+        if N == 1:
+            return points
+        # let points[N+1] = the array of points
+
+        min_point = points[0]
+        for point in points:
+            if point is not None:
+                if point[1] < min_point[1]:
+                    min_point = point
+        a = points.index(min_point)
+        points[0], points[a] = points[a], points[0]
+
+        def find_polar_angle(p):
+            dy = (p[1]-min_point[1])
+            dx = (p[0]-min_point[0])
+
+            if dx == 0:
+                if dy > 0: return math.pi / 2
+                elif dy < 0: return - math.pi / 2
+                else: return 0
+            return math.atan(dy/dx)
+
+        sorted_points = sorted(points[1:], key=find_polar_angle)
+        points = [None, min_point] + sorted_points
+
+        # We want points[0] to be a sentinel point that will stop the loop.
+        points[0] = points[N]
+
+        # M will denote the number of points on the convex hull.
+        M = 1
+        for i in range(2, N):
+            # Find next valid point on convex hull.
+            while Map.ccw(points[M-1], points[M], points[i]) <= 0:
+                if M > 1:
+                    M -= 1
+                    continue
+                # All points are collinear
+                elif i == N:
+                    break
+                else:
+                    i += 1
+
+            # Update M and swap points[i] to the correct place.
+            M += 1
+            points[M], points[i] = points[i], points[M]
+        return points[:M+1]
 
 
 

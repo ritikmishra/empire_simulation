@@ -41,6 +41,7 @@ if __name__ == '__main__':
             # app[x, y] = "#00ff00"
             pass
 
-    root.update()
-    root.mainloop()
+    while True:
+        root.update()
+        app.turn()
     root.destroy()
