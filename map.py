@@ -21,11 +21,16 @@ class Map:
             raise IndexError("Index must be tuple of size 2, but was actually " + str(key))
         if len(key) != 2:
             raise IndexError("Index must be tuple of size 2, but was actually " + str(key))
-        return self.grid[key[1]][key[0]]
+        try:
+            return self.grid[key[1]][key[0]]
+        except IndexError as e:
+            print("WARN: the pair", key, "is out of range")
+            raise e
 
     def rand_select(self):
         loc =  random.randrange(0, self.size), random.randrange(0, self.size)
         return self[loc]
+
 
     def getCellsInRadius(self, r, loc):
         if r > 0:
@@ -35,7 +40,8 @@ class Map:
 
             for dx in range(-r, r+1):
                 for dy in range(-r, r+1):
-                    new_territories.add((a + dx, b + dy))
+                    if 0 <= a + dx < self.size and 0 <= b + dy < self.size:
+                        new_territories.add((a + dx, b + dy))
 
             return new_territories
 

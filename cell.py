@@ -97,7 +97,10 @@ class Cell:
     def chopTrees(self, labor):
         dy = (self.properties["Land Fertility"] - self._treeFunc(self.properties["Forest"])) * self.properties[
             "Forest"] * (1 - self.properties["Forest"])
-        self.properties["Forest"] += dy
+        self.properties["Forest"] -= dy
+        if dy < 0:
+            # print("     ")
+            pass
         return dy * self.properties["Land Area"] * labor
 
     """
@@ -110,4 +113,4 @@ class Cell:
 
     @staticmethod
     def _treeFunc(x):
-        return -1.0 / ((x + 1) ** 2 + 1) + 0.5
+        return -2*x+1

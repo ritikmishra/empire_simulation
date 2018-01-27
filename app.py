@@ -59,7 +59,6 @@ class App:
 
         self.cellpx = float(MAP_SIZE) / map.size
 
-
         g = 3
 
         x = 0
@@ -77,9 +76,6 @@ class App:
         while y <= MAP_SIZE:
             self.canvas.create_line(0, y, MAP_SIZE, y)  # horizontal lines
             y += self.cellpx
-
-        self.img = PhotoImage(width=MAP_SIZE, height=MAP_SIZE)
-        self.canvas.create_image((MAP_SIZE / 2, MAP_SIZE / 2), image=self.img, state="normal")
 
         self.canvas.bind("<Button-1>", self._click_callback)
 
@@ -111,16 +107,6 @@ class App:
         bottom_right = (top_left[0] + self.cellpx, top_left[1] + self.cellpx)
         return top_left, bottom_right
 
-    # def __getitem__(self, item):
-    #     if len(item) != 2:
-    #         raise IndexError("The index must be [x, y] coordinates")
-    #     return self.img.get(item[0], [1])
-
-    # def __setitem__(self, key, value):
-    #     if len(key) != 2:
-    #         raise IndexError("The index must be [x, y] coordinates")
-    #     self.img.put(value, key)
-
     def __setitem__(self, location, color):
         if len(location) != 2:
             raise ValueError("The location must be [x, y] coordinates")
@@ -141,16 +127,17 @@ class App:
 
         for empire in self.empires:
             empire.invade(self.empires)
+            if len(empire.territory) <= 0:
+                self.empires.remove(empire)
             empire.turn()
 
             print("Empire", empire.name, "has", empire.military_strength, "military strength")
 
-
         self.update_sidebar()
         self.render_cells()
 
-        self[self.last_clicked] = App.SELECTED_COLOR
-
+        if self.last_clicked is not None:
+            self[self.last_clicked] = App.SELECTED_COLOR
 
     def add_empire(self, empire):
         self.empires.append(empire)
