@@ -48,13 +48,6 @@ class Map:
             for dx in range(lower_x, upper_x):
                 for dy in range(lower_y, upper_y):
                     new_territories.add((a+dx, b+dy))
-
-            # for dx in range(-r, r + 1):
-            #     for dy in range(-r, r + 1):
-            #         if 0 <= a + dx < self.size and 0 <= b + dy < self.size:
-            #             new_territories.add((a + dx, b + dy))
-
-
             return new_territories
 
     def getAdjacentLocs(self, locs):

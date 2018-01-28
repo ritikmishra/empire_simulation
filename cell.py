@@ -46,7 +46,7 @@ class Cell:
         result.base_birth_rate = result.base_death_rate + random.uniform(0.1,
                                                                          0.5)  # death_rate + uniform \in [-0.2, 0.2]
 
-        result.carrying_capacity = result.properties["Population"] * random.betavariate(2,2) * 10
+        result.carrying_capacity = max(result.properties["Population"] * random.betavariate(3.9, 1.3) * 10, result.properties["Population"] *  2)
 
         result.properties["Desirability"] = result.properties["Land Area"] \
                                             * (result.properties["Ore"] + result.properties["Forest"]
@@ -65,7 +65,11 @@ class Cell:
 
         dy = self.properties["Population"] * (self.base_birth_rate - self.base_death_rate) * (
         1 - self.properties["Population"] / self.carrying_capacity)
+
         self.properties["Population"] = self.properties["Population"] + dy
+
+        if self.properties["Population"] == float("-inf") or self.properties["Population"] == float("-inf"):
+            raise Exception("what the frickin heck dude")
 
     """
     When calculating desirability, this function adjusts the temp constant so that pos temp impacts less than neg temp

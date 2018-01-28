@@ -7,8 +7,8 @@ from map import Map
 
 WIDTH, HEIGHT = 1336, 200
 
-MAP_SIZE = 600
-SIDEBAR_WIDTH = 200
+MAP_SIZE = 1000
+SIDEBAR_WIDTH = 300
 
 SIDEBAR_X = MAP_SIZE + 25
 SIDEBAR_DY = 25
@@ -121,20 +121,18 @@ class App:
     def turn(self):
         self.map.turn()
 
-        sortEmpire = lambda x, y: x.military_strength - y.military_strength
+        sortEmpire = lambda x: len(x.territory)
 
-        self.empires = sorted(self.empires, key=functools.cmp_to_key(sortEmpire), reverse=False)
+        self.empires = sorted(self.empires, key=sortEmpire, reverse=False)
 
         for empire in self.empires:
             empire.invade(self.empires)
             if len(empire.territory) <= 0:
                 self.empires.remove(empire)
             empire.turn()
-
-            print("Empire", empire.name, "has", empire.military_strength, "military strength")
+        self.render_cells()
 
         self.update_sidebar()
-        self.render_cells()
 
         if self.last_clicked is not None:
             self[self.last_clicked] = App.SELECTED_COLOR

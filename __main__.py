@@ -36,12 +36,7 @@ if __name__ == '__main__':
     for _ in range(num_empires):
         app.add_empire(Empire(random.choice(names), grid.rand_select()))
 
-    for x in range(300):
-        for y in range(300):
-            # app[x, y] = "#00ff00"
-            pass
-
     while True:
-        root.update()
         app.turn()
+        root.update()
     root.destroy()

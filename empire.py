@@ -8,7 +8,7 @@ from map import Map
 
 
 class Empire:
-    kP = 0
+    kP = .02
     ADULT_PERCENT = 0.65
     APP = None
 
@@ -45,7 +45,7 @@ class Empire:
             self.metals += cell.mineOre(self.mine_alloc * available_labor)
             self.wood += cell.chopTrees(self.chop_alloc * available_labor)
             self.pop += cell.properties["Population"]
-            if self.metals == float("inf"):
+            if self.pop == float("-inf"):
                 raise Exception("what the frickin heck")
             self.land_area += cell.properties["Land Area"] - 0.5
             self.travel += cell.properties["Travel"]
@@ -54,6 +54,8 @@ class Empire:
 
 
         self.military_strength = (self.pop * Empire.kP + self.metals + self.wood)
+        if self.military_strength != self.military_strength:
+            raise Exception("what the frickin heck")
         # self.mine_alloc = self.metals / self.military_strength
         # self.chop_alloc = 1 - self.mine_alloc
         if self.military_strength < 0:
@@ -76,41 +78,38 @@ class Empire:
             if random.random() < 0.01:
                 cells_in_radius = Empire.APP.map.getCellsInRadius(2, (a, b))
                 reduction = 2
-                print(self.name, "got inspired!")
+
             else:
                 cells_in_radius = Empire.APP.map.getCellsInRadius(1, (a, b))
                 reduction = 1
             for cell in cells_in_radius:
                 self.new_territories.add(cell)
 
-        self.new_territories = list(set(self.new_territories))
-
-        new_territories_cell = [x for x in sorted([Empire.APP.map[x, y] for x, y in self.new_territories if 0 <= x < Empire.APP.map.size and 0 <= y < Empire.APP.map.size], key=lambda cell: cell.properties["Desirability"]) if x.properties["Empire"] == "Unconquered"]
+        # Sorts all cells by desirability
+        new_territories_cell = [x for x in sorted([Empire.APP.map[x, y] for x, y in self.new_territories if 0 <= x < Empire.APP.map.size and 0 <= y < Empire.APP.map.size], key=lambda cell: cell.properties["Desirability"], reverse=True) if x.properties["Empire"] == "Unconquered"]
 
 
         for cell in new_territories_cell:
             if self.military_strength > 0:
-                    self.territory.add(cell)
-                    self.military_strength -= (random.gauss(50, 10) + cell.properties["Desirability"]) / reduction
+                self.territory.add(cell)
+                self.military_strength -= (random.gauss(50, 10) + cell.properties["Desirability"]) / reduction
+
 
     """Very power-hungry, slow method."""
     def invade(self, other_empires):
-
+        invaded_territory = set()
         for other_empire in other_empires:
             if other_empire.name != self.name:
-
-                invaded_territory = set()
 
                 invadable_territory = other_empire.territory & self.getBeyondBorders()
 
                 for cell in invadable_territory:
                     target_military_strength = (cell.properties["Desirability"] + (other_empire.military_strength/len(other_empire.territory))) / self.military_strength
-                    if self.military_strength > target_military_strength > 0:
+                    if self.military_strength > target_military_strength:
                         invaded_territory.add(cell)
                         self.military_strength -= target_military_strength
-
-                other_empire.territory = other_empire.territory - invaded_territory
-                self.territory = self.territory | invaded_territory
+                        other_empire.territory -= invaded_territory
+        self.territory = self.territory | invaded_territory
 
     """Also a very power hungry slow method"""
     def getBeyondBorders(self):
